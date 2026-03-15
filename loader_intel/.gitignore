@@ -1,6 +1,31 @@
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.mypy_cache/
+
+.venv/
+venv/
+.env
+
 logs/*.log
 output/*
+
+# Runtime/generated data
 data/raw_*.json
 data/analyzed_*.json
+data/seen_hashes.json
+data/*.tmp
+
+# Generated reports and exports
+reports/
+*.pdf
+*.html
+*.png
+
+# OS/editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
