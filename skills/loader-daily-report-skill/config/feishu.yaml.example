@@ -1,0 +1,7 @@
+# 飞书配置
+# 设置 webhook URL 或使用环境变量 FEISHU_WEBHOOK_URL
+
+feishu_webhook: ""
+
+# 可选：使用环境变量
+# export FEISHU_WEBHOOK_URL="https://open.feishu.cn/open-apis/bot/v2/hook/xxx"

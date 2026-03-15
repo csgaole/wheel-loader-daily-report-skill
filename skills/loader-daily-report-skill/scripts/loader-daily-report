@@ -1,0 +1,304 @@
+#!/bin/bash
+#
+# loader-daily-report - 装载机行业情报日报 Skill
+#
+
+set -e
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+SKILL_DIR="$(dirname "$SCRIPT_DIR")"
+WORKSPACE_DIR="$(cd "$SKILL_DIR/../.." && pwd)"
+LOADER_INTEL_DIR="$WORKSPACE_DIR/loader_intel"
+REPORTS_DIR="$WORKSPACE_DIR/reports/loader"
+
+# 颜色输出
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+# 显示帮助
+show_help() {
+    cat << EOF
+装载机行业情报日报 Skill
+
+用法: loader-daily-report <命令> [选项]
+
+命令:
+    generate    生成日报
+    config      查看/配置设置
+    help        显示帮助
+
+generate 选项:
+    --date DATE     指定日期 (格式: YYYY-MM-DD，默认: 今天)
+    --pdf           同时生成 PDF
+    --send          发送到飞书 (需先配置 webhook)
+    --dry-run       测试运行，不保存文件
+
+config 选项:
+    --feishu-webhook URL    设置飞书 webhook URL
+    --show                  显示当前配置
+
+示例:
+    loader-daily-report generate                    # 生成今日日报
+    loader-daily-report generate --pdf --send       # 生成 PDF 并发送到飞书
+    loader-daily-report generate --date 2026-03-11  # 生成指定日期日报
+    loader-daily-report config --show               # 查看配置
+
+EOF
+}
+
+# 日志函数
+log_info() {
+    echo -e "${BLUE}[INFO]${NC} $1"
+}
+
+log_success() {
+    echo -e "${GREEN}[SUCCESS]${NC} $1"
+}
+
+log_warn() {
+    echo -e "${YELLOW}[WARN]${NC} $1"
+}
+
+log_error() {
+    echo -e "${RED}[ERROR]${NC} $1"
+}
+
+# 检查依赖
+check_dependencies() {
+    local missing=()
+    
+    if ! command -v python3 &> /dev/null; then
+        missing+=("python3")
+    fi
+    
+    if ! command -v pandoc &> /dev/null; then
+        log_warn "pandoc 未安装，PDF 生成功能将不可用"
+    fi
+    
+    if ! command -v wkhtmltopdf &> /dev/null; then
+        log_warn "wkhtmltopdf 未安装，PDF 生成功能将不可用"
+    fi
+    
+    if [ ${#missing[@]} -ne 0 ]; then
+        log_error "缺少必要依赖: ${missing[*]}"
+        exit 1
+    fi
+}
+
+# 生成日报
+generate_report() {
+    local date_str="$1"
+    local generate_pdf="$2"
+    local send_feishu="$3"
+    local dry_run="$4"
+    
+    log_info "开始生成日报: $date_str"
+    
+    # 检查 loader_intel 目录
+    if [ ! -d "$LOADER_INTEL_DIR" ]; then
+        log_error "loader_intel 目录不存在: $LOADER_INTEL_DIR"
+        exit 1
+    fi
+    
+    # 运行 loader_intel 脚本
+    cd "$LOADER_INTEL_DIR"
+    
+    if [ "$dry_run" = "true" ]; then
+        log_info "测试模式运行..."
+        python3 scripts/reporter.py --date "$date_str" --dry-run
+    else
+        # 生成 Markdown 报告
+        log_info "生成 Markdown 报告..."
+        if [ -f "scripts/reporter.py" ]; then
+            python3 scripts/reporter.py --date "$date_str" --output "$REPORTS_DIR"
+        else
+            # 使用 run.sh 作为备选
+            ./run.sh --date "$date_str"
+        fi
+        
+        local report_file="$REPORTS_DIR/${date_str}-loader-report.md"
+        
+        if [ ! -f "$report_file" ]; then
+            log_warn "报告文件未生成，可能当日无新闻"
+            return 1
+        fi
+        
+        log_success "Markdown 报告已生成: $report_file"
+        
+        # 生成 PDF
+        if [ "$generate_pdf" = "true" ]; then
+            generate_pdf_report "$report_file"
+        fi
+        
+        # 发送到飞书
+        if [ "$send_feishu" = "true" ]; then
+            send_to_feishu "$report_file" "$generate_pdf"
+        fi
+    fi
+    
+    log_success "日报生成完成！"
+}
+
+# 生成 PDF
+generate_pdf_report() {
+    local md_file="$1"
+    local pdf_file="${md_file%.md}.pdf"
+    
+    log_info "生成 PDF..."
+    
+    if ! command -v pandoc &> /dev/null || ! command -v wkhtmltopdf &> /dev/null; then
+        log_error "缺少 pandoc 或 wkhtmltopdf，无法生成 PDF"
+        return 1
+    fi
+    
+    pandoc "$md_file" -o "$pdf_file" --pdf-engine=wkhtmltopdf
+    
+    if [ -f "$pdf_file" ]; then
+        log_success "PDF 已生成: $pdf_file"
+    else
+        log_error "PDF 生成失败"
+        return 1
+    fi
+}
+
+# 发送到飞书
+send_to_feishu() {
+    local report_file="$1"
+    local has_pdf="$2"
+    
+    log_info "发送到飞书..."
+    
+    local config_file="$SKILL_DIR/config/feishu.yaml"
+    
+    if [ ! -f "$config_file" ]; then
+        log_error "飞书配置不存在，请先运行: loader-daily-report config --feishu-webhook <URL>"
+        return 1
+    fi
+    
+    # 使用 loader_intel 的推送脚本
+    if [ -f "$LOADER_INTEL_DIR/scripts/push_feishu_msg.py" ]; then
+        cd "$LOADER_INTEL_DIR"
+        
+        if [ "$has_pdf" = "true" ]; then
+            local pdf_file="${report_file%.md}.pdf"
+            if [ -f "$pdf_file" ]; then
+                python3 scripts/push_feishu_msg.py --pdf "$pdf_file"
+            else
+                python3 scripts/push_feishu_msg.py --markdown "$report_file"
+            fi
+        else
+            python3 scripts/push_feishu_msg.py --markdown "$report_file"
+        fi
+        
+        log_success "已发送到飞书"
+    else
+        log_warn "飞书推送脚本不存在"
+        return 1
+    fi
+}
+
+# 配置管理
+manage_config() {
+    local show_config="$1"
+    local feishu_webhook="$2"
+    
+    local config_dir="$SKILL_DIR/config"
+    local config_file="$config_dir/feishu.yaml"
+    
+    mkdir -p "$config_dir"
+    
+    if [ "$show_config" = "true" ]; then
+        if [ -f "$config_file" ]; then
+            log_info "当前配置:"
+            cat "$config_file"
+        else
+            log_warn "配置文件不存在"
+        fi
+        return
+    fi
+    
+    if [ -n "$feishu_webhook" ]; then
+        echo "feishu_webhook: \"$feishu_webhook\"" > "$config_file"
+        log_success "飞书 webhook 已配置"
+    fi
+}
+
+# 主函数
+main() {
+    local command="$1"
+    shift || true
+    
+    case "$command" in
+        generate|gen|g)
+            local date_str=$(date +%Y-%m-%d)
+            local generate_pdf="false"
+            local send_feishu="false"
+            local dry_run="false"
+            
+            while [[ $# -gt 0 ]]; do
+                case "$1" in
+                    --date)
+                        date_str="$2"
+                        shift 2
+                        ;;
+                    --pdf)
+                        generate_pdf="true"
+                        shift
+                        ;;
+                    --send)
+                        send_feishu="true"
+                        shift
+                        ;;
+                    --dry-run)
+                        dry_run="true"
+                        shift
+                        ;;
+                    *)
+                        shift
+                        ;;
+                esac
+            done
+            
+            check_dependencies
+            generate_report "$date_str" "$generate_pdf" "$send_feishu" "$dry_run"
+            ;;
+            
+        config|cfg|c)
+            local show_config="false"
+            local feishu_webhook=""
+            
+            while [[ $# -gt 0 ]]; do
+                case "$1" in
+                    --show)
+                        show_config="true"
+                        shift
+                        ;;
+                    --feishu-webhook)
+                        feishu_webhook="$2"
+                        shift 2
+                        ;;
+                    *)
+                        shift
+                        ;;
+                esac
+            done
+            
+            manage_config "$show_config" "$feishu_webhook"
+            ;;
+            
+        help|--help|-h)
+            show_help
+            ;;
+            
+        *)
+            log_error "未知命令: $command"
+            show_help
+            exit 1
+            ;;
+    esac
+}
+
+main "$@"
