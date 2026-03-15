@@ -1,0 +1,64 @@
+# 装载机行业 - 重点厂商配置
+# 用于归类和追踪竞品动态
+
+companies:
+  # 国内厂商
+  domestic:
+    - name: 三一
+      aliases: [三一重工，SANY, 三一集团]
+      focus: [电动化，无人化，智能化]
+      
+    - name: 徐工
+      aliases: [徐工机械，XCMG, 徐工集团]
+      focus: [装载机，工程机械]
+      
+    - name: 柳工
+      aliases: [柳工机械，LiuGong, 广西柳工]
+      focus: [装载机，电动化]
+      
+    - name: 临工
+      aliases: [山东临工，SDLG, 临工集团]
+      focus: [装载机，出口]
+      
+    - name: 山工
+      aliases: [山工机械，SEM, 卡特山工]
+      focus: [装载机]
+
+  # 国际厂商
+  international:
+    - name: 卡特彼勒
+      aliases: [Caterpillar, CAT, 卡特]
+      focus: [无人化，电动化，智能施工]
+      
+    - name: 小松
+      aliases: [Komatsu, 小松制作所]
+      focus: [自动驾驶，智能施工]
+      
+    - name: 沃尔沃建筑设备
+      aliases: [Volvo CE, 沃尔沃]
+      focus: [电动化，自动化]
+      
+    - name: JCB
+      aliases: [JCB 英国]
+      focus: [氢能源，电动化]
+      
+    - name: CASE
+      aliases: [CASE 凯斯]
+      focus: [装载机]
+      
+    - name: DEVELON
+      aliases: [Doosan, 斗山]
+      focus: [工程机械]
+      
+    - name: 日立
+      aliases: [Hitachi, 日立建机]
+      focus: [大型装载机]
+
+# 厂商动态分类标签
+tracking_tags:
+  - 新品发布
+  - 技术突破
+  - 商业合作
+  - 市场动态
+  - 财务表现
+  - 人事变动

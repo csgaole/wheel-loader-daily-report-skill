@@ -1,0 +1,136 @@
+# 公开来源配置
+# 支持 RSS、API、网页爬虫等多种数据源
+
+sources:
+  # ========== RSS 源（免费，无需 API Key）==========
+  rss:
+    - name: Google News - 装载机（中文）
+      type: google_news_rss
+      enabled: true
+      url_template: "https://news.google.com/rss/search?q={query}&hl=zh-CN&gl=CN&ceid=CN:zh-Hans"
+      queries:
+        - "无人装载机 工程机械"
+        - "电动装载机"
+        - "智能装载机"
+        - "三一重工 装载机"
+        - "徐工 装载机"
+        - "柳工 装载机"
+        - "卡特彼勒 装载机"
+        - "小松 装载机"
+      language: zh
+      max_entries: 10
+      
+    - name: Google News - Wheel Loader（英文）
+      type: google_news_rss
+      enabled: true
+      url_template: "https://news.google.com/rss/search?q={query}&hl=en-US&gl=US&ceid=US:en"
+      queries:
+        - "wheel loader autonomous"
+        - "electric wheel loader"
+        - "construction machinery automation"
+      language: en
+      max_entries: 10
+
+    - name: World Construction Network
+      type: rss
+      enabled: true
+      url: "https://www.worldconstructionnetwork.com/feed/"
+      language: en
+      max_entries: 15
+
+    - name: Equipment Journal
+      type: rss
+      enabled: true
+      url: "https://www.equipmentjournal.com/feed/"
+      language: en
+      max_entries: 15
+
+    - name: International Mining
+      type: rss
+      enabled: true
+      url: "https://im-mining.com/feed/"
+      language: en
+      max_entries: 15
+
+  # ========== 搜索 API（需要 API Key）==========
+  search_api:
+    - name: Bing News Search
+      type: bing_news_api
+      enabled: false  # 需配置 API Key 后启用
+      api_key_env: "BING_SEARCH_API_KEY"
+      endpoint: "https://api.bing.microsoft.com/v7.0/news/search"
+      queries:
+        - "wheel loader"
+        - "autonomous loader"
+      market: "zh-CN"
+      max_results: 20
+      
+    - name: Google Custom Search
+      type: google_custom_search
+      enabled: false  # 需配置 API Key 后启用
+      api_key_env: "GOOGLE_SEARCH_API_KEY"
+      cse_id_env: "GOOGLE_CSE_ID"
+      queries:
+        - "装载机 新品"
+        - "工程机械 智能化"
+      max_results: 20
+
+  # ========== 行业网站（爬虫，注意 robots.txt）==========
+  industry_sites:
+    - name: 第一工程机械网
+      type: scraper
+      enabled: true
+      base_url: "https://www.d1cm.com"
+      category_urls:
+        - "/news/"
+        - "/product/"
+      parser: "d1cm_parser"
+      
+    - name: 中国工程机械工业协会
+      type: scraper
+      enabled: true
+      base_url: "http://www.cncma.org"
+      parser: "ccema_parser"
+
+    - name: 铁甲工程机械网
+      type: scraper
+      enabled: true
+      base_url: "https://www.cehome.com"
+      parser: "cehome_parser"
+
+  # ========== 备用模拟数据 ==========
+  mock:
+    - name: 模拟数据（备用）
+      type: mock
+      enabled: true  # 当真实数据不足时启用
+      min_real_items: 3
+
+# 采集策略
+strategy:
+  # 优先顺序
+  priority:
+    - rss
+    - search_api
+    - industry_sites
+    - mock
+  
+  # 超时设置（秒）
+  timeout:
+    rss: 10
+    api: 30
+    scraper: 60
+  
+  # 去重窗口（小时）
+  dedup_window_hours: 72
+  
+  # 时间范围（小时）
+  time_range_hours: 72
+
+# 未来扩展
+future_extensions:
+  - baidu_news_api
+  - wechat_mp_articles
+  - industry_reports_pdf
+  - weekly_summary
+  - excavator_truck_mining_extension
+  - competitor_price_tracking

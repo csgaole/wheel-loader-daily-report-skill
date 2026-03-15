@@ -1,0 +1,49 @@
+# 装载机行业情报 - 搜索关键词配置
+# 支持中文和英文关键词
+
+search_keywords:
+  # 核心产品词
+  products:
+    - 装载机
+    - 轮式装载机
+    - 铲车
+    
+  # 技术方向
+  technologies:
+    - 无人装载机
+    - 智能装载机
+    - 电动装载机
+    - 遥控装载机
+    - 自动驾驶装载机
+    - 远程操控装载机
+    
+  # 场景相关
+  scenarios:
+    - 搅拌站装载机
+    - 矿山装载机
+    - 工程机械智能化
+    - 装载机自动化
+    
+  # 英文关键词
+  english:
+    - wheel loader
+    - autonomous loader
+    - unmanned loader
+    - intelligent loader
+    - electric wheel loader
+    - remote loader
+    - construction machinery automation
+    - loader teleoperation
+    - loader ADAS
+
+# 排除关键词（降低噪音）
+exclude_keywords:
+  - 游戏
+  - 玩具
+  - 模型
+  - 儿童
+  - 食谱
+  - 菜谱
+
+# 时间范围（小时）
+time_range_hours: 72  # 优先 24 小时，内容少时放宽到 72 小时

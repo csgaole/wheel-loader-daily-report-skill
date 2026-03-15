@@ -1,0 +1,12 @@
+schedule:
+  timezone: Asia/Shanghai
+  daily_time: '08:00'
+output:
+  report_dir: /home/legao/.openclaw/workspace/reports/loader/
+  file_pattern: YYYY-MM-DD-loader-report.md
+push:
+  feishu_summary_items: 3
+retention:
+  raw_data_days: 7
+  logs_days: 14
+  reports_archive: true

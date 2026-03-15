@@ -1,0 +1,22 @@
+# 飞书机器人配置
+# 
+# 方式 1: 使用环境变量 FEISHU_WEBHOOK_URL（优先）
+# 方式 2: 在此文件中配置 webhook_url
+
+# 飞书群机器人 Webhook URL
+# 获取方式：飞书群 → 机器人 → 添加自定义机器人 → 复制 Webhook 地址
+webhook_url: ""
+
+# 推送设置
+settings:
+  # 是否推送摘要（true=只推摘要，false=推送全文）
+  summary_only: true
+  
+  # 推送时间（与定时任务配合）
+  send_time: "08:30"
+  
+  # 失败重试次数
+  retry_count: 3
+  
+  # 请求超时（秒）
+  timeout_seconds: 30

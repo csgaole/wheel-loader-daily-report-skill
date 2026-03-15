@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+logs/*.log
+output/*
+data/raw_*.json
+data/analyzed_*.json

@@ -1,0 +1,8 @@
+# 装载机行业情报日报系统 - Python 依赖
+# 最小依赖集，优先使用标准库
+
+requests>=2.28.0
+feedparser>=6.0.0
+PyYAML>=6.0
+beautifulsoup4>=4.11.0
+lxml>=4.9.0
